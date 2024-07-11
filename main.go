@@ -21,7 +21,7 @@ func main() {
 
 	<-sigch //the program will be blocked here till ctrl+c is pressed
 
-	//this will stop all the goroutines when the stopCh is passed
+	//this will stop all the goroutines where the stopCh was passed
 	close(stopCh)
 
 	//flush all the keys from the memory to disk

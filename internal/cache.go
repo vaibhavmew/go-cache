@@ -9,7 +9,7 @@ import (
 )
 
 type Cache struct {
-	mu   sync.Mutex
+	mu   sync.Mutex //protects the data map
 	data map[string]Data
 }
 
@@ -57,8 +57,6 @@ func (c *Cache) Update(key string, value string, expiry time.Time) {
 	if expiry.IsZero() {
 		expiry = c.data[key].Expiry
 	}
-
-	fmt.Println(expiry)
 
 	data := Data{
 		Value:  value,
