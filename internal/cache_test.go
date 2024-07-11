@@ -97,7 +97,7 @@ func TestKeyNotFound(t *testing.T) {
 	assert.Equal(t, "", value)
 }
 
-func TestMonitor(t *testing.T) {
+func TestMonitorWithExpiry(t *testing.T) {
 	t.Parallel()
 
 	cache := NewCache()
@@ -116,6 +116,27 @@ func TestMonitor(t *testing.T) {
 	value := cache.Get("key")
 	assert.Equal(t, "", value)
 	assert.Equal(t, 0, len(cache.data))
+}
+
+func TestMonitorWithoutExpiry(t *testing.T) {
+	t.Parallel()
+
+	cache := NewCache()
+
+	cache.Insert("key", "value", time.Time{})
+	assert.Equal(t, 1, len(cache.data))
+
+	stopCh := make(chan struct{})
+
+	go cache.Monitor(stopCh)
+
+	time.Sleep(time.Second * 2)
+
+	close(stopCh)
+
+	value := cache.Get("key")
+	assert.Equal(t, "value", value)
+	assert.Equal(t, 1, len(cache.data))
 }
 
 func TestGetKeys(t *testing.T) {

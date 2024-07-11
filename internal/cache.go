@@ -94,6 +94,10 @@ func (c *Cache) Monitor(stopCh chan struct{}) {
 			c.mu.Lock()
 
 			for k, v := range c.data {
+				if v.Expiry.IsZero() {
+					continue
+				}
+
 				if v.Expiry.Before(time.Now()) {
 					delete(c.data, k)
 					fmt.Println("deleted the key: ", k)
