@@ -11,6 +11,8 @@ import (
 type Cache struct {
 	mu   sync.Mutex //protects the data map
 	data map[string]Data
+
+	transaction Transaction
 }
 
 type Data struct {
@@ -21,11 +23,17 @@ type Data struct {
 func NewCache() *Cache {
 	return &Cache{
 		data: make(map[string]Data),
+		transaction: Transaction{
+			data: make(map[string]Data),
+		},
 	}
 }
 
 func (c *Cache) Insert(key string, value string, expiry time.Time) {
-	c.mu.Lock()
+	if !c.transaction.isLockAcquired { //regular insert
+		c.mu.Lock()
+		defer c.mu.Unlock()
+	}
 
 	data := Data{
 		Value:  value,
@@ -33,7 +41,6 @@ func (c *Cache) Insert(key string, value string, expiry time.Time) {
 	}
 
 	c.data[key] = data
-	c.mu.Unlock()
 }
 
 func (c *Cache) Get(key string) string {
@@ -55,8 +62,10 @@ func (c *Cache) Update(key string, value string, expiry time.Time) {
 	c.mu.Lock()
 
 	if expiry.IsZero() {
-		expiry = c.data[key].Expiry
+		expiry = c.data[key].Expiry //use the existing expiry timestamp
 	}
+
+	//if only timestamp is updated
 
 	data := Data{
 		Value:  value,
