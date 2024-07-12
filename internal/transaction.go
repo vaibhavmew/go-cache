@@ -12,15 +12,14 @@ type Transaction struct {
 }
 
 func (c *Cache) Start() (*Transaction, error) {
+	c.mu.Lock()
 
 	transaction := Transaction{
 		data:           make(map[string]Data),
 		isLockAcquired: true,
 	}
 
-	c.mu.Lock() //lock the cache mutex
 	c.transaction = transaction
-	//empty the data object
 
 	return &transaction, nil
 }
