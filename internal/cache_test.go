@@ -75,6 +75,22 @@ func TestUpdateKeyWithoutExpiry(t *testing.T) {
 
 }
 
+func TestUpdateOnlyExpiry(t *testing.T) {
+	t.Parallel()
+
+	cache := NewCache()
+	now := time.Now()
+	cache.Insert("key-five", "value-four", time.Time{})
+
+	//only updating the key not the expiry time
+	cache.Update("key-five", "", now)
+
+	data := cache.data["key-five"]
+	assert.Equal(t, "value-four", data.Value)
+	assert.Equal(t, now, data.Expiry)
+
+}
+
 func TestUpdateKeyDoesNotExist(t *testing.T) {
 	t.Parallel()
 

@@ -30,7 +30,7 @@ func NewCache() *Cache {
 }
 
 func (c *Cache) Insert(key string, value string, expiry time.Time) {
-	if !c.transaction.isLockAcquired { //regular insert
+	if !c.transaction.isLockAcquired {
 		c.mu.Lock()
 		defer c.mu.Unlock()
 	}
@@ -65,7 +65,9 @@ func (c *Cache) Update(key string, value string, expiry time.Time) {
 		expiry = c.data[key].Expiry //use the existing expiry timestamp
 	}
 
-	//if only timestamp is updated
+	if value == "" {
+		value = c.data[key].Value //use the existing value
+	}
 
 	data := Data{
 		Value:  value,

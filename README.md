@@ -1,8 +1,6 @@
 # go-cache
 Disk based key value store
 
-//add validator
-//add transaction block
 //add cli 
 //add fsync system call
 //sync two go-cache instances

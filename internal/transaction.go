@@ -1,51 +1,70 @@
 package cache
 
-import "sync"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 type Transaction struct {
-	mu             sync.Mutex      //also lock the cache mutex
 	data           map[string]Data //used for storing temporary data
 	isLockAcquired bool            //refers to the cache lock
 }
 
 func (c *Cache) Start() (*Transaction, error) {
-	var (
-		transaction Transaction
-		err         error
-	)
 
-	c.mu.Lock()             //lock the cache mutex
-	c.transaction.mu.Lock() //transaction block starts
-	c.transaction.isLockAcquired = true
+	transaction := Transaction{
+		data:           make(map[string]Data),
+		isLockAcquired: true,
+	}
+
+	c.mu.Lock() //lock the cache mutex
+	c.transaction = transaction
 	//empty the data object
 
-	return &transaction, err
+	return &transaction, nil
 }
-
-// read, write, update, delete
 
 func (c *Cache) Commit() error {
 	var err error
 
 	//inserting data into the data field
 	for k, v := range c.transaction.data {
+		fmt.Println(k, v)
 		c.data[k] = v
 	}
 
-	c.transaction.mu.Unlock() //transaction block complete
-	c.mu.Unlock()
+	//clear the transaction metadata. use sync.Pool in the future
+	c.transaction.data = make(map[string]Data)
 	c.transaction.isLockAcquired = false
-	//empty the data object
+
+	c.mu.Unlock()
 
 	return err
 }
 
 func (c *Cache) Abort() error {
 
-	c.transaction.mu.Unlock() //transaction block complete
-	c.mu.Unlock()
+	//clear the transaction metadata. use sync.Pool in the future
+	c.transaction.data = make(map[string]Data)
 	c.transaction.isLockAcquired = false
-	//empty the data object
+
+	c.mu.Unlock()
+
+	return nil
+}
+
+func (tx *Transaction) Insert(key string, value string, expiry time.Time) error {
+	if !tx.isLockAcquired {
+		return errors.New("transaction not started")
+	}
+
+	data := Data{
+		Value:  value,
+		Expiry: expiry,
+	}
+
+	tx.data[key] = data
 
 	return nil
 }
